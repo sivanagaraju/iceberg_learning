@@ -6,8 +6,6 @@ def create_spark_session():
             .appName("Iceberg SQL Runner")
             .config("spark.jars.packages", "org.apache.iceberg:iceberg-spark-runtime-3.2_2.12:0.14.0")
             .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
-            .config("spark.sql.catalog.spark_catalog", "org.apache.iceberg.spark.SparkSessionCatalog")
-            .config("spark.sql.catalog.spark_catalog.type", "hive")
             .config("spark.sql.catalog.hadoop_catalog", "org.apache.iceberg.spark.SparkCatalog")
             .config("spark.sql.catalog.hadoop_catalog.type", "hadoop")
             .config("spark.sql.catalog.hadoop_catalog.warehouse", "s3://your-bucket/warehouse")
