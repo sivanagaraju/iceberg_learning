@@ -1,0 +1,9 @@
+spark.sql.extensions=org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
+spark.sql.catalog.spark_catalog=org.apache.iceberg.spark.SparkSessionCatalog
+spark.sql.catalog.spark_catalog.type=hive
+
+spark.sql.catalog.hadoop_catalog=org.apache.iceberg.spark.SparkCatalog
+spark.sql.catalog.hadoop_catalog.type=hadoop
+spark.sql.catalog.hadoop_catalog.warehouse=s3://your-bucket/warehouse
+
+spark.sql.defaultCatalog=hadoop_catalog
