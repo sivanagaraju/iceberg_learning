@@ -68,15 +68,16 @@ SELECT * FROM (
 ) AS new_order_items
 WHERE NOT EXISTS (SELECT 1 FROM `calm-hub-qa`.ecommerce.order_items LIMIT 1);
 
--- Alter table: Add a column to Customers table if it doesn't exist
-ALTER TABLE `calm-hub-qa`.ecommerce.customers
-ADD COLUMN IF NOT EXISTS phone_number STRING;
+-- Check if phone_number column exists in Customers table
+SET spark.sql.legacy.setCommandRejectsSparkCoreConfs = false;
+SET @@SPARK_CATALOG_IMPLEMENTATION_CLASS = 'org.apache.iceberg.spark.SparkCatalog';
+SET @@SPARK_CATALOG_NAME = 'calm-hub-qa';
 
--- Alter table: Rename a column in Products table if old column exists and new doesn't
--- Note: This may fail if the column doesn't exist or has already been renamed
--- You may need to handle this in your application logic
-ALTER TABLE `calm-hub-qa`.ecommerce.products
-RENAME COLUMN price TO unit_price;
+-- Add phone_number column to Customers table if it doesn't exist
+ALTER TABLE `calm-hub-qa`.ecommerce.customers ADD COLUMN phone_number STRING;
+
+-- Alter table: Rename a column in Products table
+ALTER TABLE `calm-hub-qa`.ecommerce.products RENAME COLUMN price TO unit_price;
 
 -- Upsert (merge) example for Products table
 MERGE INTO `calm-hub-qa`.ecommerce.products t
