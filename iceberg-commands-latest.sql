@@ -1,37 +1,38 @@
 -- Create Customers table with supported constraints and default values
+-- Create Customers table with supported constraints
 CREATE TABLE IF NOT EXISTS `calm-hub-qa`.ecommerce.customers (
   customer_id INT NOT NULL,
   name STRING NOT NULL,
   email STRING NOT NULL,
   address STRING,
   phone_number STRING,
-  registration_date DATE DEFAULT current_date(),
-  last_login_date TIMESTAMP DEFAULT current_timestamp(),
-  is_active BOOLEAN DEFAULT true,
-  loyalty_points INT DEFAULT 0
+  registration_date DATE,
+  last_login_date TIMESTAMP,
+  is_active BOOLEAN,
+  loyalty_points INT
 ) USING iceberg;
 
--- Create Orders table with supported constraints and default values
+-- Create Orders table with supported constraints
 CREATE TABLE IF NOT EXISTS `calm-hub-qa`.ecommerce.orders (
   order_id INT NOT NULL,
   customer_id INT NOT NULL,
-  order_date DATE NOT NULL DEFAULT current_date(),
-  status STRING NOT NULL DEFAULT 'Pending',
+  order_date DATE NOT NULL,
+  status STRING NOT NULL,
   total_amount DECIMAL(10,2) NOT NULL,
-  last_updated TIMESTAMP DEFAULT current_timestamp()
+  last_updated TIMESTAMP
 ) USING iceberg
 PARTITIONED BY (order_date);
 
--- Create Products table with supported constraints and default values
+-- Create Products table with supported constraints
 CREATE TABLE IF NOT EXISTS `calm-hub-qa`.ecommerce.products (
   product_id INT NOT NULL,
   name STRING NOT NULL,
   description STRING,
   price DECIMAL(10,2) NOT NULL,
-  stock_quantity INT NOT NULL DEFAULT 0,
+  stock_quantity INT NOT NULL,
   category STRING,
-  created_at TIMESTAMP DEFAULT current_timestamp(),
-  is_available BOOLEAN DEFAULT true
+  created_at TIMESTAMP,
+  is_available BOOLEAN
 ) USING iceberg;
 
 -- Create Order_Items table with supported constraints
@@ -51,6 +52,19 @@ SET TBLPROPERTIES ('comment' = 'This table stores customer information');
 -- Add a comment to a column (metadata)
 ALTER TABLE `calm-hub-qa`.ecommerce.products 
 ALTER COLUMN price COMMENT 'The current price of the product';
+
+-- Set write order for a table
+ALTER TABLE `calm-hub-qa`.ecommerce.orders 
+SET TBLPROPERTIES (
+  'write.format.default' = 'parquet',
+  'write.parquet.compression-codec' = 'zstd'
+);
+
+-- Specify sort order for a table
+ALTER TABLE `calm-hub-qa`.ecommerce.order_items
+SET TBLPROPERTIES (
+  'sort-order' = 'order_id ASC NULLS LAST'
+);
 -- Create a view for order summaries (views don't support constraints, but we'll include NOT NULL for clarity)
 CREATE OR REPLACE VIEW `calm-hub-qa`.ecommerce.order_summaries AS
 SELECT 
