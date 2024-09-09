@@ -1,70 +1,56 @@
--- Table Creation Statements
------------------------------
--- Create Customers table with constraints and NOT NULL specifications
+-- Create Customers table with supported constraints and default values
 CREATE TABLE IF NOT EXISTS `calm-hub-qa`.ecommerce.customers (
   customer_id INT NOT NULL,
   name STRING NOT NULL,
   email STRING NOT NULL,
   address STRING,
   phone_number STRING,
-  registration_date DATE NOT NULL DEFAULT CURRENT_DATE(),
-  last_login TIMESTAMP,
-  is_active BOOLEAN NOT NULL DEFAULT true,
-  CONSTRAINT pk_customer PRIMARY KEY (customer_id) ENFORCED,
-  CONSTRAINT uq_email UNIQUE (email) ENFORCED
+  registration_date DATE DEFAULT current_date(),
+  last_login_date TIMESTAMP DEFAULT current_timestamp(),
+  is_active BOOLEAN DEFAULT true,
+  loyalty_points INT DEFAULT 0
 ) USING iceberg;
 
--- Create Orders table with constraints, default values, and NOT NULL specifications
+-- Create Orders table with supported constraints and default values
 CREATE TABLE IF NOT EXISTS `calm-hub-qa`.ecommerce.orders (
   order_id INT NOT NULL,
   customer_id INT NOT NULL,
-  order_date DATE NOT NULL DEFAULT CURRENT_DATE(),
+  order_date DATE NOT NULL DEFAULT current_date(),
   status STRING NOT NULL DEFAULT 'Pending',
-  total_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-  shipping_address STRING,
-  CONSTRAINT pk_order PRIMARY KEY (order_id) ENFORCED,
-  CONSTRAINT fk_customer FOREIGN KEY (customer_id) REFERENCES `calm-hub-qa`.ecommerce.customers(customer_id) ENFORCED,
-  CONSTRAINT chk_status CHECK (status IN ('Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled')) ENFORCED,
-  CONSTRAINT chk_total_amount CHECK (total_amount >= 0) ENFORCED
+  total_amount DECIMAL(10,2) NOT NULL,
+  last_updated TIMESTAMP DEFAULT current_timestamp()
 ) USING iceberg
 PARTITIONED BY (order_date);
 
--- Create Products table with constraints, default values, and NOT NULL specifications
+-- Create Products table with supported constraints and default values
 CREATE TABLE IF NOT EXISTS `calm-hub-qa`.ecommerce.products (
   product_id INT NOT NULL,
   name STRING NOT NULL,
   description STRING,
-  category STRING NOT NULL,
-  price DECIMAL(10, 2) NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
   stock_quantity INT NOT NULL DEFAULT 0,
-  is_available BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
-  last_updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
-  CONSTRAINT pk_product PRIMARY KEY (product_id) ENFORCED,
-  CONSTRAINT uq_product_name UNIQUE (name) ENFORCED,
-  CONSTRAINT chk_price CHECK (price > 0) ENFORCED,
-  CONSTRAINT chk_stock CHECK (stock_quantity >= 0) ENFORCED
+  category STRING,
+  created_at TIMESTAMP DEFAULT current_timestamp(),
+  is_available BOOLEAN DEFAULT true
 ) USING iceberg;
 
--- Create Order_Items table with constraints, default values, and NOT NULL specifications
+-- Create Order_Items table with supported constraints
 CREATE TABLE IF NOT EXISTS `calm-hub-qa`.ecommerce.order_items (
   order_item_id INT NOT NULL,
   order_id INT NOT NULL,
   product_id INT NOT NULL,
-  quantity INT NOT NULL DEFAULT 1,
-  unit_price DECIMAL(10, 2) NOT NULL,
-  subtotal DECIMAL(10, 2) NOT NULL,
-  discount_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-  is_gift BOOLEAN NOT NULL DEFAULT false,
-  CONSTRAINT pk_order_item PRIMARY KEY (order_item_id) ENFORCED,
-  CONSTRAINT fk_order FOREIGN KEY (order_id) REFERENCES `calm-hub-qa`.ecommerce.orders(order_id) ENFORCED,
-  CONSTRAINT fk_product FOREIGN KEY (product_id) REFERENCES `calm-hub-qa`.ecommerce.products(product_id) ENFORCED,
-  CONSTRAINT chk_quantity CHECK (quantity > 0) ENFORCED,
-  CONSTRAINT chk_unit_price CHECK (unit_price >= 0) ENFORCED,
-  CONSTRAINT chk_subtotal CHECK (subtotal >= 0) ENFORCED,
-  CONSTRAINT chk_discount CHECK (discount_amount >= 0) ENFORCED
+  quantity INT NOT NULL,
+  unit_price DECIMAL(10,2) NOT NULL,
+  subtotal DECIMAL(10,2) NOT NULL
 ) USING iceberg;
 
+-- Add a comment to a table (metadata)
+ALTER TABLE `calm-hub-qa`.ecommerce.customers 
+SET TBLPROPERTIES ('comment' = 'This table stores customer information');
+
+-- Add a comment to a column (metadata)
+ALTER TABLE `calm-hub-qa`.ecommerce.products 
+ALTER COLUMN price COMMENT 'The current price of the product';
 -- Create a view for order summaries (views don't support constraints, but we'll include NOT NULL for clarity)
 CREATE OR REPLACE VIEW `calm-hub-qa`.ecommerce.order_summaries AS
 SELECT 
